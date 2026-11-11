@@ -40,6 +40,16 @@ UPDATE "public"."g2p_register_sections"
 DELETE FROM "public"."g2p_intake_form_ui_tab_sections"
  WHERE "section_id" = 'cropsown_cropsown_location_section_03';
 
+-- Close the gap the Address left: each intake tab's sections are numbered 1, 2, 3, ...
+-- in the order they already have.
+UPDATE "public"."g2p_intake_form_ui_tab_sections" t
+   SET "section_order" = r.position
+  FROM (SELECT "tab_section_id",
+               row_number() OVER (PARTITION BY "tab_id" ORDER BY "section_order", "tab_section_id") AS position
+          FROM "public"."g2p_intake_form_ui_tab_sections") r
+ WHERE t."tab_section_id" = r."tab_section_id"
+   AND t."section_order" IS DISTINCT FROM r.position;
+
 DO $$
 DECLARE problem text;
 BEGIN

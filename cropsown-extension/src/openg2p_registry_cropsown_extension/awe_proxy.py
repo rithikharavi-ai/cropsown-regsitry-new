@@ -4,6 +4,7 @@ from pathlib import Path
 
 from openg2p_fastapi_common.context import component_registry, get_async_session_maker
 from openg2p_registry_core.controller_services import G2PAweProxyControllerService
+from openg2p_registry_core.errors import G2PRegistryErrorCodes, G2PRegistryException
 from openg2p_registry_core.helpers import AWEClientError, AweHelper
 from sqlalchemy import text
 
@@ -17,6 +18,15 @@ class ScopedAweProxyControllerService(ScopedAweTasksMixin, G2PAweProxyController
 
     def _awe_helper(self):
         return AweHelper.get_component()
+
+    async def submit_task_decision(self, payload, *, bearer_token: str):
+        """A message is mandatory for both approve and reject decisions."""
+        if not (payload.comment or "").strip():
+            raise G2PRegistryException(
+                code=G2PRegistryErrorCodes.REQUEST_VALIDATION_ERROR.value[1],
+                message="A message is required to approve or reject",
+            )
+        return await super().submit_task_decision(payload, bearer_token=bearer_token)
 
     async def _call_awe(self, call):
         try:

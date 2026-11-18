@@ -1,4 +1,4 @@
--- Crop Sown register list: a "Fayda Fin" column next to "Fayda FAN ID", so a farmer
+-- Crop Sown register list: a "Fayda FIN ID" column next to "Fayda FAN ID", so a farmer
 -- registered with a FIN no longer shows a blank Fayda value. Each row shows its FAN in
 -- one column and its FIN in the other (field fayda_fin, a stored column of the record).
 --
@@ -15,7 +15,7 @@ UPDATE "public"."g2p_register_schemas" s
                  FROM jsonb_array_elements(s."search_result_schema"::jsonb) e
                UNION ALL
                SELECT jsonb_build_object('order', f.fan_order + 1, 'field_name', 'fayda_fin',
-                                         'display_label', 'Fayda Fin')) x)::json
+                                         'display_label', 'Fayda FIN ID')) x)::json
   FROM (SELECT (c->>'order')::int AS fan_order
           FROM "public"."g2p_register_schemas" s2, jsonb_array_elements(s2."search_result_schema"::jsonb) c
          WHERE s2."register_id" = '6b06a95a-9a6c-5a33-a33d-c1625716c59c' AND c->>'field_name' = 'fayda_fan_id') f
@@ -27,7 +27,7 @@ UPDATE "public"."g2p_register_schemas" s
 UPDATE "public"."g2p_register_schemas"
    SET "search_result_schema" = (
        SELECT jsonb_agg(CASE WHEN item->>'field_name' = 'fayda_fin'
-                             THEN item || '{"display_label": "Fayda Fin"}'::jsonb ELSE item END ORDER BY position)
+                             THEN item || '{"display_label": "Fayda FIN ID"}'::jsonb ELSE item END ORDER BY position)
          FROM jsonb_array_elements("search_result_schema"::jsonb) WITH ORDINALITY AS a(item, position))::json
  WHERE "register_id" = '6b06a95a-9a6c-5a33-a33d-c1625716c59c';
 
@@ -37,7 +37,7 @@ UPDATE "public"."g2p_register_schemas"
 UPDATE "public"."registry_languages"
    SET "domain_translation" = (COALESCE("domain_translation"::jsonb, '{}'::jsonb) || jsonb_build_object('fayda_fin',
        CASE "language_code" WHEN 'am' THEN 'የፋይዳ መለያ (FIN)' WHEN 'om' THEN 'Lakkoofsa Fayidaa (FIN)'
-                            WHEN 'ti' THEN 'መለለዪ ፋይዳ (FIN)' ELSE 'Fayda Fin' END))::json;
+                            WHEN 'ti' THEN 'መለለዪ ፋይዳ (FIN)' ELSE 'Fayda FIN ID' END))::json;
 
 DO $$
 DECLARE fan int; fin int;
@@ -48,7 +48,7 @@ BEGIN
       FROM "public"."g2p_register_schemas" s, jsonb_array_elements(s."search_result_schema"::jsonb) c
      WHERE s."register_id" = '6b06a95a-9a6c-5a33-a33d-c1625716c59c';
     IF fan IS NULL OR fin IS NULL OR fin <> fan + 1 THEN
-        RAISE EXCEPTION 'Crop Sown list: the Fayda Fin column is not next to Fayda FAN ID';
+        RAISE EXCEPTION 'Crop Sown list: the Fayda FIN ID column is not next to Fayda FAN ID';
     END IF;
 END
 $$;
